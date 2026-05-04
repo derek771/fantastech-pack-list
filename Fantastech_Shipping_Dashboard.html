@@ -305,4 +305,112 @@
     card.classList.remove('filtered-out');
     document.getElementById('archive-list').appendChild(card);
     var arr = getArchived();
-    if (arr.indexOf(id) === -1) { arr.p
+    if (arr.indexOf(id) === -1) { arr.push(id); setArchived(arr); }
+    refreshCounts();
+    updateArchiveHeader();
+    applyFilter(getActiveFilter());
+  }
+
+  function restoreCard(id) {
+    if (!id) return;
+    var card = document.querySelector('.order-card[data-sh-id="' + id + '"]');
+    if (!card) return;
+    card.classList.remove('archived');
+    document.querySelector('.orders').appendChild(card);
+    var arr = getArchived().filter(function (x) { return x !== id; });
+    setArchived(arr);
+    refreshCounts();
+    updateArchiveHeader();
+    applyFilter(getActiveFilter());
+  }
+
+  function toggleArchiveList() {
+    var list = document.getElementById('archive-list');
+    var toggle = document.getElementById('archive-toggle');
+    var opening = !list.classList.contains('open');
+    list.classList.toggle('open', opening);
+    toggle.textContent = opening ? '▲ Hide' : '▼ Show';
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var archived = getArchived();
+    var archiveList = document.getElementById('archive-list');
+    archived.forEach(function (id) {
+      var card = document.querySelector('.order-card[data-sh-id="' + id + '"]');
+      if (card) {
+        card.classList.add('archived');
+        archiveList.appendChild(card);
+      }
+    });
+
+    document.querySelectorAll('.summary-card[data-filter]').forEach(function (tab) {
+      tab.addEventListener('click', function () { applyFilter(tab.dataset.filter); });
+    });
+
+    document.querySelectorAll('.archive-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        archiveCard(btn.dataset.id);
+      });
+    });
+
+    document.querySelectorAll('.restore-btn').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        restoreCard(btn.dataset.id);
+      });
+    });
+
+    var header = document.getElementById('archive-header');
+    if (header) header.addEventListener('click', toggleArchiveList);
+
+    refreshCounts();
+    updateArchiveHeader();
+    applyFilter('all');
+  });
+})();
+
+// --- PWA install flow ---
+(function () {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js').catch(function () {});
+    });
+  }
+
+  var deferredPrompt = null;
+  var installBtn = document.getElementById('install-btn');
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) installBtn.classList.add('visible');
+  });
+
+  if (installBtn) {
+    installBtn.addEventListener('click', function () {
+      if (!deferredPrompt) {
+        alert(
+          'If you don’t see an install option here, use your browser menu:\n\n' +
+          '• Chrome / Edge (Windows): menu (⋮) → "Install Pack List…" or "Apps → Install this site"\n' +
+          '• Safari (iPad / iPhone): Share → Add to Home Screen\n' +
+          '• Chrome (Android tablet): menu → Install app'
+        );
+        return;
+      }
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function () {
+        deferredPrompt = null;
+        installBtn.classList.remove('visible');
+      });
+    });
+  }
+
+  window.addEventListener('appinstalled', function () {
+    deferredPrompt = null;
+    if (installBtn) installBtn.classList.remove('visible');
+  });
+})();
+</script>
+</body>
+</html>
