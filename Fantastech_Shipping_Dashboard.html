@@ -256,7 +256,7 @@
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) {}
   }
 
-  function activeCards() { return document.querySelectorAll('.orders > .order-card'); }
+  function activeCards() { return document.querySelectorAll('.orders > .order-card:not(.field-shipped)'); }
   function archivedCards() { return document.querySelectorAll('.archive-list > .order-card'); }
 
   function refreshCounts() {
@@ -377,6 +377,7 @@
     refreshCounts();
     updateArchiveHeader();
     applyFilter('all');
+    window._packRefreshCounts = refreshCounts;
   });
 })();
 
@@ -473,6 +474,7 @@
           applyShipped(id, marking);
           if (marking) moveCard(card, true);
           else         moveCard(card, false);
+          if (window._packRefreshCounts) window._packRefreshCounts();
           btn.disabled = false;
         })
         .catch(function () {
@@ -501,6 +503,7 @@
             if (card && orders) orders.appendChild(card);
           }
         });
+        if (window._packRefreshCounts) window._packRefreshCounts();
       })
       .catch(function () { /* silently ignore if worker unreachable */ });
   });
