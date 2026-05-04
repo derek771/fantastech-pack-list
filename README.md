@@ -1,2 +1,2 @@
-# fantastech-pack-list
-Fantastech shipping pack list dashboard
+# Fantastech Pack List
+Warehouse shipping dashboard.
